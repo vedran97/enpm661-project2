@@ -216,14 +216,20 @@ def backTrack(inputNode:GraphNode):
 
 #Execute Djikstra with debug prints, and save files            
 def dikPrintReversePath(start,end,printPath:bool):
-    print('START:\r\n{}'.format(start))
-    print('Expected END:\r\n{}'.format(end))
+    start2 = copy.deepcopy(start)
+    end2 = copy.deepcopy(end)
+    start2=(249-start2[0],start2[1])
+    end2=(249-end2[0],end2[1])
+    print('START:\r\n{}'.format(start2))
+    print('Expected END:\r\n{}'.format(end2))
     result,visitedNodes = dikstra(start,end)
     if result is None:
         print("Unable to find result")
         return
     print('\r\nFOUND A SOLUTION \r\n')
-    print('Result:\r\n{}'.format(result.DATA))
+    res = copy.deepcopy(result.DATA)
+    res= (249-res[0],res[1])
+    print('Result:\r\n{}'.format(res))
     back = backTrack(result)
     print('\r\nSTEPS:\r\n{}'.format(len(back)-1))
     if printPath:
@@ -335,6 +341,7 @@ while True:
     endY = int(input('End Point Y(Row) coordinate:'))
     endX = int(input('End Point X(Column) coordinate:'))
     #Invert axis
-    startY = 250 - startY
+    startY = 249 - startY
+    endY = 249 - endY
     break
 djikstraViz((startY,startX),(endY,endX))
