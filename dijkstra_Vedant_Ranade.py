@@ -23,14 +23,14 @@ OBSTACLE_COLOR = [255,0,0]
 obstacle_image = np.full((YBOUND[-1]+5+1,XBOUND[-1]+5+1,3),125,dtype=np.uint8)
 # Define obstacles
 # Define Rectangles
-def rectangle1(p):
-    if p[0] > (100-5) and p[0]<(150+5) and p[1]<(100+5):
+def rectangle1(pixelCoordinate):
+    if pixelCoordinate[0] > (100-5) and pixelCoordinate[0]<(150+5) and pixelCoordinate[1]<(100+5):
         return False
     else:
         return True
     
-def rectangle2(p):
-    if p[0] > (100-5) and p[0]<(150+5) and p[1]>(150-5):
+def rectangle2(pixelCoordinates):
+    if pixelCoordinates[0] > (100-5) and pixelCoordinates[0]<(150+5) and pixelCoordinates[1]>(150-5):
         return False
     else:
         return True  
@@ -38,17 +38,17 @@ def rectangle2(p):
 # Define Hexagon
 hex_actual_vertex = [[235,162.5],[300,200],[365,162.5],[365,87.5],[300,50],[235,87.5]]
 Hex_Padded     = [[230.7,165],[300,205],[369.3,165],[369.3,85],[300,45],[230.7,85]]
-L1 = np.polyfit([Hex_Padded[0][0],Hex_Padded[1][0]] , [Hex_Padded[0][1],Hex_Padded[1][1]] , 1)
-L2 = np.polyfit([Hex_Padded[1][0],Hex_Padded[2][0]] , [Hex_Padded[1][1],Hex_Padded[2][1]] , 1)
-L3 = np.polyfit([Hex_Padded[3][0],Hex_Padded[4][0]] , [Hex_Padded[3][1],Hex_Padded[4][1]] , 1)
-L4 = np.polyfit([Hex_Padded[4][0],Hex_Padded[5][0]] , [Hex_Padded[4][1],Hex_Padded[5][1]] , 1)
+line1 = np.polyfit([Hex_Padded[0][0],Hex_Padded[1][0]] , [Hex_Padded[0][1],Hex_Padded[1][1]] , 1)
+line2 = np.polyfit([Hex_Padded[1][0],Hex_Padded[2][0]] , [Hex_Padded[1][1],Hex_Padded[2][1]] , 1)
+line3 = np.polyfit([Hex_Padded[3][0],Hex_Padded[4][0]] , [Hex_Padded[3][1],Hex_Padded[4][1]] , 1)
+line4 = np.polyfit([Hex_Padded[4][0],Hex_Padded[5][0]] , [Hex_Padded[4][1],Hex_Padded[5][1]] , 1)
 
-def hexagon(p):
-    L1_ = p[1] - L1[0]*p[0] - L1[1] <0
-    L2_ = p[1] - L2[0]*p[0] - L2[1] <0
-    L3_ = p[1] - L3[0]*p[0] - L3[1] >0
-    L4_ = p[1] - L4[0]*p[0] - L4[1] >0
-    if L1_ and L2_ and L3_ and L4_ and p[0]>230.7 and p[0]<369.3:
+def hexagon(pixelCoordinate):
+    line1Cond = pixelCoordinate[1] - line1[0]*pixelCoordinate[0] - line1[1] <0
+    line2Cond = pixelCoordinate[1] - line2[0]*pixelCoordinate[0] - line2[1] <0
+    line3Cond = pixelCoordinate[1] - line3[0]*pixelCoordinate[0] - line3[1] >0
+    line4Cond = pixelCoordinate[1] - line4[0]*pixelCoordinate[0] - line4[1] >0
+    if line1Cond and line2Cond and line3Cond and line4Cond and pixelCoordinate[0]>230.7 and pixelCoordinate[0]<369.3:
         return False
     else:
         return True
@@ -56,13 +56,13 @@ def hexagon(p):
 # Define Triangle
 triangle_actual = [[460,225],[510,125],[460,25]]
 triangle_padded     = [[455,238],[517,125],[455,10]]
-Q1 = np.polyfit([triangle_padded[0][0],triangle_padded[1][0]] , [triangle_padded[0][1],triangle_padded[1][1]] , 1)
-Q2 = np.polyfit([triangle_padded[1][0],triangle_padded[2][0]] , [triangle_padded[1][1],triangle_padded[2][1]] , 1)
+side1 = np.polyfit([triangle_padded[0][0],triangle_padded[1][0]] , [triangle_padded[0][1],triangle_padded[1][1]] , 1)
+side2 = np.polyfit([triangle_padded[1][0],triangle_padded[2][0]] , [triangle_padded[1][1],triangle_padded[2][1]] , 1)
 
-def triangle(p):
-    Q1_ = p[1] - Q1[0]*p[0] - Q1[1] <0
-    Q2_ = p[1] - Q2[0]*p[0] - Q2[1] >0
-    if Q1_ and Q2_ and p[0]>455:
+def triangle(pixelCoordinates):
+    side1Cond = pixelCoordinates[1] - side1[0]*pixelCoordinates[0] - side1[1] <0
+    side2Cond = pixelCoordinates[1] - side2[0]*pixelCoordinates[0] - side2[1] >0
+    if side1Cond and side2Cond and pixelCoordinates[0]>455:
         return False
     else:
         return True
@@ -246,8 +246,24 @@ def findVisitedNotesPerFrame(path,visited:OrderedSet):
 # Visualize Path and obstacles
 def vizPath(empty_images,path):
     obstacle_color = (255,0,0)
+    empty_images2 = np.full((len(empty_images)+5,250,600,3),125,dtype=np.uint8)
+    #make the background common
+    for idx,image in enumerate(empty_images2):
+        empty_images2[idx] = empty_images[-1]
+    #draw the path
+    #for this, find path
+    path_pts = []
+    #find path
     for idx,node in enumerate(path):
-        y,x = node.DATA
+        path_pts.append(node.DATA)
+    # For image in empty_images2 , draw path
+    # Marks path
+    for image in empty_images2:
+        for data in path_pts:
+            y,x = data
+            image =cv2.circle(image, (x,y), 1, (0,0,255),1)
+    empty_images = np.concatenate((empty_images,empty_images2),axis=0)
+    for idx,image in enumerate(empty_images):
         #Rectangle 1:
         empty_images[idx] = cv2.rectangle(empty_images[idx], (99,0) , (149,99), obstacle_color ,  -1)
         #Rectangle 2:
@@ -258,8 +274,10 @@ def vizPath(empty_images,path):
         #Hexagon 1:
         hex_corners = [(235-1, 163-1),(300-1,200-1),(365-1,163-1),(365-1,88-1),(300-1,50-1),(235-1,88-1)]
         empty_images[idx] = cv2.fillPoly(empty_images[idx], np.array([hex_corners]), obstacle_color)
+    for idx,node in enumerate(path):
+        y,x = node.DATA
         #Mark Node position by a circle
-        empty_images[idx] = cv2.circle(empty_images[idx], (x,y), 2, (0,0,255),-1)
+        empty_images[idx+5+len(path)] = cv2.circle(empty_images[idx+5+len(path)], (x,y), 4, (0,0,255),-1)
     return empty_images
 
 #Explored color == GREEN
